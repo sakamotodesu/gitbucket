@@ -11,6 +11,7 @@ import gitbucket.core.util.Directory._
 import io.github.gitbucket.scalatra.forms._
 import org.eclipse.jgit.api.Git
 import org.scalatra.i18n.Messages
+import org.slf4j.LoggerFactory
 
 class WikiController extends WikiControllerBase 
   with WikiService with RepositoryService with AccountService with ActivityService
@@ -18,6 +19,8 @@ class WikiController extends WikiControllerBase
 
 trait WikiControllerBase extends ControllerBase {
   self: WikiService with RepositoryService with ActivityService with ReadableUsersAuthenticator with ReferrerAuthenticator =>
+
+  private val logger = LoggerFactory.getLogger(classOf[WikiControllerBase])
 
   case class WikiPageEditForm(pageName: String, content: String, message: Option[String], currentPageName: String, id: String)
   
@@ -38,6 +41,9 @@ trait WikiControllerBase extends ControllerBase {
   )(WikiPageEditForm.apply)
   
   get("/:owner/:repository/wiki")(referrersOnly { repository =>
+    logger.info("wiki")
+    logger.info(params.get("go-get").toString)
+    logger.info(repository.toString)
     getWikiPage(repository.owner, repository.name, "Home").map { page =>
       html.page("Home", page, getWikiPageList(repository.owner, repository.name),
         repository, isEditable(repository),

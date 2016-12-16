@@ -1,6 +1,6 @@
 package gitbucket.core.controller
 
-import javax.servlet.http.{HttpServletResponse, HttpServletRequest}
+import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
 import gitbucket.core.plugin.PluginRegistry
 import gitbucket.core.repo.html
@@ -16,7 +16,6 @@ import gitbucket.core.model.{Account, WebHook}
 import gitbucket.core.service.WebHookService._
 import gitbucket.core.view
 import gitbucket.core.view.helpers
-
 import io.github.gitbucket.scalatra.forms._
 import org.apache.commons.io.FileUtils
 import org.eclipse.jgit.api.{ArchiveCommand, Git}
@@ -27,6 +26,7 @@ import org.eclipse.jgit.lib._
 import org.eclipse.jgit.revwalk.RevCommit
 import org.eclipse.jgit.treewalk._
 import org.scalatra._
+import org.slf4j.LoggerFactory
 
 
 class RepositoryViewerController extends RepositoryViewerControllerBase
@@ -41,6 +41,9 @@ trait RepositoryViewerControllerBase extends ControllerBase {
   self: RepositoryService with AccountService with ActivityService with IssuesService with WebHookService with CommitsService
     with ReadableUsersAuthenticator with ReferrerAuthenticator with WritableUsersAuthenticator with PullRequestService with CommitStatusService
     with WebHookPullRequestService with WebHookPullRequestReviewCommentService with ProtectedBranchService =>
+
+  private val logger = LoggerFactory.getLogger(classOf[RepositoryViewerControllerBase])
+
 
   ArchiveCommand.registerFormat("zip", new ZipFormat)
   ArchiveCommand.registerFormat("tar.gz", new TgzFormat)
@@ -118,11 +121,12 @@ trait RepositoryViewerControllerBase extends ControllerBase {
    * Displays the file list of the repository root and the default branch.
    */
   get("/:owner/:repository") {
+    logger.info(params.get("go-get").toString)
     params.get("go-get") match {
       case Some("1") => defining(request.paths){ paths =>
         getRepository(paths(0), paths(1)).map(gitbucket.core.html.goget(_))getOrElse NotFound()
       }
-      case _ => referrersOnly(fileList(_))
+      case _ => logger.info("hohoho") ;referrersOnly(fileList(_))
     }
   }
 
@@ -546,6 +550,7 @@ trait RepositoryViewerControllerBase extends ControllerBase {
    * @return HTML of the file list
    */
   private def fileList(repository: RepositoryService.RepositoryInfo, revstr: String = "", path: String = ".") = {
+    logger.info(repository.toString)
     if(repository.commitCount == 0){
       html.guide(repository, hasDeveloperRole(repository.owner, repository.name, context.loginAccount))
     } else {
