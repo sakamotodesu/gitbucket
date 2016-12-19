@@ -1,13 +1,15 @@
 package gitbucket.core.service
 
 import gitbucket.core.controller.Context
-import gitbucket.core.model.{Collaborator, Repository, RepositoryOptions, Account, Role}
+import gitbucket.core.model.{Account, Collaborator, Repository, RepositoryOptions, Role}
 import gitbucket.core.model.Profile._
 import gitbucket.core.util.JGitUtil
+import org.slf4j.LoggerFactory
 import profile.simple._
 
 trait RepositoryService { self: AccountService =>
   import RepositoryService._
+
 
   /**
    * Creates a new repository.
@@ -203,6 +205,7 @@ trait RepositoryService { self: AccountService =>
    * @return the repository information
    */
   def getRepository(userName: String, repositoryName: String)(implicit s: Session): Option[RepositoryInfo] = {
+    logger.info("getRepository")
     (Repositories filter { t => t.byRepository(userName, repositoryName) } firstOption) map { repository =>
       // for getting issue count and pull request count
       val issues = Issues.filter { t =>
@@ -220,6 +223,14 @@ trait RepositoryService { self: AccountService =>
         ),
         getRepositoryManagers(repository.userName))
     }
+  }
+
+  def getWikiRepository(repository: RepositoryInfo)(implicit s: Session): Option[RepositoryInfo] = {
+    Some( RepositoryInfo(repository.owner,
+      repository.name+".wiki",
+      repository.repository,
+      repository.issueCount,repository.pullCount
+    ,repository.commitCount,repository.forkedCount,repository.branchList,repository.tags,repository.managers))
   }
 
   /**
@@ -419,6 +430,7 @@ trait RepositoryService { self: AccountService =>
 }
 
 object RepositoryService {
+  private val logger = LoggerFactory.getLogger(classOf[RepositoryService])
 
   case class RepositoryInfo(owner: String, name: String, repository: Repository,
     issueCount: Int, pullCount: Int, commitCount: Int, forkedCount: Int,
@@ -446,6 +458,7 @@ object RepositoryService {
     def sshUrl(implicit context: Context): Option[String] = RepositoryService.sshUrl(owner, name)
 
     def splitPath(path: String): (String, String) = {
+      logger.info("path: " +path)
       val id = branchList.collectFirst {
         case branch if(path == branch || path.startsWith(branch + "/")) => branch
       } orElse tags.collectFirst {

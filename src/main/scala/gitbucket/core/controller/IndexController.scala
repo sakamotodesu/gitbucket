@@ -8,6 +8,7 @@ import gitbucket.core.util.ControlUtil._
 import gitbucket.core.util.{Keys, LDAPUtil, ReferrerAuthenticator, StringUtil, UsersAuthenticator}
 import io.github.gitbucket.scalatra.forms._
 import org.scalatra.Ok
+import org.slf4j.LoggerFactory
 
 
 class IndexController extends IndexControllerBase 
@@ -18,6 +19,8 @@ class IndexController extends IndexControllerBase
 trait IndexControllerBase extends ControllerBase {
   self: RepositoryService with ActivityService with AccountService with RepositorySearchService
     with UsersAuthenticator with ReferrerAuthenticator =>
+
+  private val logger = LoggerFactory.getLogger(classOf[IndexControllerBase])
 
   case class SignInForm(userName: String, password: String)
 
@@ -38,9 +41,15 @@ trait IndexControllerBase extends ControllerBase {
   get("/"){
     context.loginAccount.map { account =>
       val visibleOwnerSet: Set[String] = Set(account.userName) ++ getGroupsByUserName(account.userName)
-      gitbucket.core.html.index(getRecentActivitiesByOwners(visibleOwnerSet), Nil, getUserRepositories(account.userName, withoutPhysicalInfo = true))
+      val userRepos = getUserRepositories(account.userName, withoutPhysicalInfo = true)
+      logger.info("userRepos" + userRepos.toString())
+      val visibleRepo = getRecentActivitiesByOwners(visibleOwnerSet)
+      //logger.info("visibleRepos" + visibleRepo.toString())
+      gitbucket.core.html.index(visibleRepo, Nil, userRepos)
     }.getOrElse {
-      gitbucket.core.html.index(getRecentActivities(), getVisibleRepositories(None, withoutPhysicalInfo = true), Nil)
+      val visibleRepo = getVisibleRepositories(None, withoutPhysicalInfo = true)
+      logger.info("visibleRepos" + visibleRepo.toString())
+      gitbucket.core.html.index(getRecentActivities(), visibleRepo, Nil)
     }
   }
 

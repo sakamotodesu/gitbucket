@@ -1,4 +1,6 @@
-@(pages: List[String],
+@(branch: String,
+  hasWritePermission: Boolean,
+  pages: List[String],
   repository: gitbucket.core.service.RepositoryService.RepositoryInfo,
   isEditable: Boolean)(implicit context: gitbucket.core.controller.Context)
 @import gitbucket.core.view.helpers
@@ -17,6 +19,11 @@
       </li>
     </ul>
     <ul class="pull-left">
+    @gitbucket.core.helper.html.branchcontrol(branch, repository, hasWritePermission){
+      @repository.branchList.map { x =>
+        <li><a href="@helpers.url(repository)/tree/@helpers.encodeRefName(x)">@gitbucket.core.helper.html.checkicon(x == branch) @x</a></li>
+      }
+    }
       @pages.map { page =>
         <li><a href="@helpers.url(repository)/wiki/@helpers.urlEncode(page)">@page</a></li>
       }

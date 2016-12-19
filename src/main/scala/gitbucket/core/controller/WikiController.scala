@@ -190,7 +190,9 @@ trait WikiControllerBase extends ControllerBase {
   })
 
   get("/:owner/:repository/wiki/_pages")(referrersOnly { repository =>
-    html.pages(getWikiPageList(repository.owner, repository.name), repository, isEditable(repository))
+    logger.info("pages")
+    logger.info(repository.toString)
+    html.pages("master", true, getWikiPageList(repository.owner, repository.name), repository, isEditable(repository))
   })
   
   get("/:owner/:repository/wiki/_history")(referrersOnly { repository =>

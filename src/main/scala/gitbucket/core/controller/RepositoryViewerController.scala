@@ -124,9 +124,10 @@ trait RepositoryViewerControllerBase extends ControllerBase {
     logger.info(params.get("go-get").toString)
     params.get("go-get") match {
       case Some("1") => defining(request.paths){ paths =>
+        logger.info("Some(1)")
         getRepository(paths(0), paths(1)).map(gitbucket.core.html.goget(_))getOrElse NotFound()
       }
-      case _ => logger.info("hohoho") ;referrersOnly(fileList(_))
+      case _ => logger.info("_") ;referrersOnly(fileList(_))
     }
   }
 
@@ -136,8 +137,10 @@ trait RepositoryViewerControllerBase extends ControllerBase {
   get("/:owner/:repository/tree/*")(referrersOnly { repository =>
     val (id, path) = repository.splitPath(multiParams("splat").head)
     if(path.isEmpty){
+      logger.info("repository, id")
       fileList(repository, id)
     } else {
+      logger.info("repository, id, path")
       fileList(repository, id, path)
     }
   })
@@ -263,6 +266,7 @@ trait RepositoryViewerControllerBase extends ControllerBase {
    */
   val blobRoute = get("/:owner/:repository/blob/*")(referrersOnly { repository =>
     val (id, path) = repository.splitPath(multiParams("splat").head)
+    logger.info("blob: "+repository.toString+" revstr: " +id + " path: " + path )
     val raw = params.get("raw").getOrElse("false").toBoolean
     using(Git.open(getRepositoryDir(repository.owner, repository.name))){ git =>
       val revCommit = JGitUtil.getRevCommitFromId(git, git.getRepository.resolve(id))
@@ -538,7 +542,7 @@ trait RepositoryViewerControllerBase extends ControllerBase {
   })
 
   private val readmeFiles = PluginRegistry().renderableExtensions.map { extension =>
-    s"readme.${extension}"
+    s"home.${extension}"
   } ++ Seq("readme.txt", "readme")
 
   /**
@@ -550,7 +554,8 @@ trait RepositoryViewerControllerBase extends ControllerBase {
    * @return HTML of the file list
    */
   private def fileList(repository: RepositoryService.RepositoryInfo, revstr: String = "", path: String = ".") = {
-    logger.info(repository.toString)
+    logger.info(repository.toString+" revstr: " +revstr + " path: " + path )
+
     if(repository.commitCount == 0){
       html.guide(repository, hasDeveloperRole(repository.owner, repository.name, context.loginAccount))
     } else {

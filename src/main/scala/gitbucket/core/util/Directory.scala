@@ -42,7 +42,7 @@ object Directory {
    * Substance directory of the repository.
    */
   def getRepositoryDir(owner: String, repository: String): File =
-    new File(s"${RepositoryHome}/${owner}/${repository}.git")
+    new File(s"${RepositoryHome}/${owner}/${repository}.wiki.git")
 
   /**
    * Directory for files which are attached to issue.

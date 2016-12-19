@@ -174,6 +174,7 @@ object JGitUtil {
    * Returns the repository information. It contains branch names and tag names.
    */
   def getRepositoryInfo(owner: String, repository: String): RepositoryInfo = {
+    logger.info("getRepositoryInfo owner: " + owner + " repo: "+ repository)
     using(Git.open(getRepositoryDir(owner, repository))){ git =>
       try {
         // get commit count
